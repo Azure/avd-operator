@@ -1,0 +1,24 @@
+{
+  "bindings": [
+    {
+      "name": "InputTimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 0 1 * *"
+    },
+    {
+      "name": "OutputQueueCleanup",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "virtual-machine-cleanup",
+      "connection": "AzureDataStorage"
+    },
+    {
+      "name": "OutputQueueCreation",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "virtual-machine-creation",
+      "connection": "AzureDataStorage"
+    }
+  ]
+}

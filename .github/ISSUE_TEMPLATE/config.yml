@@ -1,0 +1,3 @@
+blank_issues_enabled: false
+- name: Query Issues Output
+  uses: christothes/IssueOutputAction@v1.1

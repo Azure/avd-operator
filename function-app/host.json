@@ -1,0 +1,57 @@
+{
+  "version": "2.0",
+  "aggregator": {
+    "batchSize": 1000,
+    "flushTimeout": "00:00:30"
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.0.0, 5.0.0)"
+  },
+  "extensions": {
+    "queues": {
+      "batchSize": 20,
+      "maxDequeueCount": 5,
+      "maxPollingInterval": "00:00:10",
+      "newBatchThreshold": 10,
+      "visibilityTimeout": "00:00:30"
+    }
+  },
+  "functionTimeout": "00:30:00",
+  "healthMonitor": {
+    "enabled": true,
+    "healthCheckInterval": "00:00:10",
+    "healthCheckWindow": "00:02:00",
+    "healthCheckThreshold": 6,
+    "counterThreshold": 0.80
+  },
+  "logging": {
+    "fileLoggingMode": "debugOnly",
+    "logLevel": {
+      "default": "Information",
+      "Function": "Information",
+      "Host": "Information",
+      "Microsoft": "Information",
+      "Worker": "Information"
+    },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": false
+      },
+      "enableLiveMetrics": true,
+      "enableDependencyTracking": true,
+      "enablePerformanceCountersCollection": true
+    },
+    "console": {
+      "isEnabled": false,
+      "DisableColors": true
+    }
+  },
+  "managedDependency": {
+    "enabled": true
+  },
+  "watchDirectories": [
+    "Bicep",
+    "Modules"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "bindings": [
+    {
+      "name": "InputQueue",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "virtual-machine-creation",
+      "connection": "AzureDataStorage"
+    },
+    {
+      "name": "OutputQueueCleanup",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "virtual-machine-cleanup",
+      "connection": "AzureDataStorage"
+    },
+    {
+      "name": "OutputQueueRegistration",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "virtual-machine-registration",
+      "connection": "AzureDataStorage"
+    }
+  ]
+}
