@@ -1,15 +1,45 @@
+<#
+    .SYNOPSIS
+        Deploys a Bicep template to Azure, to deploy the required resources for AVD Operator.
+
+    .DESCRIPTION
+        This script parses the passed-in Bicep parameter file, sets the appropriate Azure
+        subscription context, optionally upgrades Bicep, and deploys the template to the
+        specified resource group.
+
+    .PARAMETER GovCloud
+        Indicates whether to use Azure US Government cloud. Default is $true.
+
+    .PARAMETER ParamFilePath
+        Path to the Bicep parameter file.
+
+    .PARAMETER UpgradeBicep
+        Switch to upgrade Bicep CLI before deployment.
+
+    .EXAMPLE
+        $params = @{
+            FunctionAppPath = ".\function-app"
+            GovCloud        = $true
+            ParamFilePath   = ".\bicep\main.dev.bicepparam"
+            UpgradeBicep    = $false
+        }
+        .\Invoke-FunctionAppDeployment.ps1 @params
+
+        Deploys the Function app using the specified parameter file in Azure US Government cloud,
+        without upgrading Bicep CLI before deployment.
+#>
 param (
+    [Parameter(Mandatory)]
+    [string]
+    $FunctionAppPath,
+
     [Parameter()]
-    [bool]
-    $GovCloud = $true,
+    [switch]
+    $GovCloud,
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [string]
-    $FunctionAppPath = "function-app",
-
-    [Parameter(Mandatory=$false)]
-    [string]
-    $ParamFilePath = ".\bicep\main.dev.bicepparam",
+    $ParamFilePath,
 
     [Parameter()]
     [switch]
@@ -58,10 +88,13 @@ if ($(az account show --query "id" -o tsv) -ne $parameters.parameters.pHostPool.
 # Function app name matches host pool name
 $functionAppName = $parameters.parameters.pHostPool.value.name 
 $resourceGroupName = $parameters.parameters.pFunctionAppResourceGroupName.value
-Write-Output "Target function app name:   '$($functionAppName)'"
-Write-Output "Target resource group name: '$($resourceGroupName)'"
 
 Write-Output "Deploying functions to function app '$($functionAppName)' in resource group '$($resourceGroupName)'"
 Compress-Archive -Path ".\$FunctionAppPath\*" -DestinationPath 'function-app.zip' -Force
-az functionapp deployment source config-zip -g $resourceGroupName -n $functionAppName --src 'function-app.zip'
-Remove-Item -Path 'function-app.zip' -Force
+try {
+    az functionapp deployment source config-zip -g $resourceGroupName -n $functionAppName --src 'function-app.zip'
+    Remove-Item -Path 'function-app.zip' -Force
+}
+catch {
+    throw "Failed to deploy function app: $($_.Exception.Message)"
+}
