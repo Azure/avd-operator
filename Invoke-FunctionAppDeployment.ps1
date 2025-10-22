@@ -25,8 +25,8 @@
         }
         .\Invoke-FunctionAppDeployment.ps1 @params
 
-        Deploys the Bicep template using the specified parameter file in Azure US Government cloud,
-        upgrading Bicep CLI before deployment.
+        Deploys the Function app using the specified parameter file in Azure US Government cloud,
+        without upgrading Bicep CLI before deployment.
 #>
 param (
     [Parameter(Mandatory)]
