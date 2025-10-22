@@ -80,14 +80,11 @@ function New-VirtualMachine {
             Write-Log "Failed to create configuration for virtual machine '${Name}'" -LogLevel 'ERRORSTOP'
         }
 
-        $AzKeyVaultSecretParameters = @{
-            AsPlainText    = $true
-            DefaultProfile = $KeyVaultContext
-            Name           = 'VMPassword'
-            VaultName      = $AuthKeyVault.Name
-        }
-        $AdminPassword = Get-AzKeyVaultSecret @AzKeyVaultSecretParameters
-        $SecureAdminPassword = ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()'
+        $bytes = New-Object byte[] 24
+        [System.Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($bytes)
+        $password = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+        $SecureAdminPassword = ConvertTo-SecureString -String $password -AsPlainText -Force
         $AdminCredentials = New-Object System.Management.Automation.PSCredential ($AdminUsername, $SecureAdminPassword)
         $AzVMOperatingSystemParameters = @{
             DefaultProfile   = $ComputeContext
@@ -209,7 +206,7 @@ function New-VirtualMachine {
         if ($CreatedVirtualMachine.IsSuccessStatusCode) {
             $VirtualMachineParameters["ErrorAction"] = "Stop"
             $VirtualMachine = (Get-AzVM @VirtualMachineParameters).Id | Get-ResourceInformation
-            if ($Environment -ne "PROD") {
+            if ($Environment -ne "DEV") {
                 $scheduledShutdownResourceId = "/subscriptions/$($VirtualMachine.SubscriptionId)/resourcegroups/$($VirtualMachine.ResourceGroupName)/providers/microsoft.devtestlab/schedules/shutdown-computevm-$($VirtualMachine.Name)"
                 $properties = @{}
                 $properties.add('status', 'Enabled')
