@@ -110,7 +110,6 @@ az deployment group create `
 
 if ($LASTEXITCODE -ne 0) {
     throw "Bicep deployment failed"
-    exit 1
 }
 Write-Output "Bicep deployment completed successfully."
 
