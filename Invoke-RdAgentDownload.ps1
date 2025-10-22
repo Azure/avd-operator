@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]
     $AssetStorageAccountName,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]
     $AssetStorageAccountResourceGroupName
 )

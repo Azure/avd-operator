@@ -29,7 +29,7 @@
         upgrading Bicep CLI before deployment.
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]
     $FunctionAppPath,
 
@@ -37,7 +37,7 @@ param (
     [switch]
     $GovCloud,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]
     $ParamFilePath,
 

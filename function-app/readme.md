@@ -29,4 +29,4 @@
    
 
 # Notes
-maxDequeueCount should be set to 5, but for testing, set to 1. In file `function-app\host.json::extensions\maxDequeueCount`
+- `maxDequeueCount` for the functions should be set to 5, but for testing, set to 1, in file `function-app\host.json::extensions\maxDequeueCount`
