@@ -47,7 +47,6 @@ function New-VirtualMachine {
     $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 
     $ComputeContext = Get-Context -SubscriptionId $ResourceGroup.SubscriptionId
-    $KeyVaultContext = Get-Context -SubscriptionId $AuthKeyVault.SubscriptionId
 
     $VirtualMachineParameters = @{
         DefaultProfile    = $ComputeContext
