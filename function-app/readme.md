@@ -15,7 +15,7 @@
    1. FSLogix `Storage Account` that has been configured for the correct identity solution.
       1. Defined in the `DEPLOYMENT_LOCATIONS` parameter within the `fslogixStorageAccountName` property.
       1. Existing Log Analytics Workspace information is contained in the `LOG_ANALYTICS_WORKSPACE` parameter.
-   1. `Disk Encryption Set` used to encypt session host disks (OS and Data).
+   1. `Disk Encryption Set` used to encrypt session host disks (OS and Data).
       1. Defined in the `DEPLOYMENT_LOCATIONS` parameter within the `diskEncryptionSet` property.
    1. `Dynamic Entra Device Security Group` *(Intune only)
       1. Used when Intune compliance is required.

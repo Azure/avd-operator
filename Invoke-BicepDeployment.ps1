@@ -7,8 +7,14 @@
         subscription context, optionally upgrades Bicep, and deploys the template to the
         specified resource group.
 
+    .PARAMETER BicepTemplatePath
+        Path to the Bicep template file.
+
+    .PARAMETER DownloadRDAgents
+        Indicates whether to download RD Agent binaries to the specified storage account.
+
     .PARAMETER GovCloud
-        Indicates whether to use Azure US Government cloud. Default is $true.
+        Indicates whether to use Azure US Government cloud.
 
     .PARAMETER ParamFilePath
         Path to the Bicep parameter file.
@@ -18,9 +24,11 @@
 
     .EXAMPLE
         $params = @{
-            GovCloud      = $false
-            ParamFilePath = ".\bicep\deploy-function-app\main.dev.bicepparam"
-            UpgradeBicep  = $true
+            BicepTemplatePath = ".\bicep\main.bicep"
+            DownloadRDAgents  = $true
+            GovCloud          = $true
+            ParamFilePath     = ".\bicep\main.dev.bicepparam"
+            UpgradeBicep      = $false
         }
         .\Invoke-BicepDeployment.ps1 @params
 
@@ -29,6 +37,14 @@
 #>
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $BicepTemplatePath,
+
+    [Parameter()]
+    [switch]
+    $DownloadRDAgents,
+
     [Parameter()]
     [bool]
     $GovCloud = $true,
@@ -81,18 +97,28 @@ if ($(az account show --query "id" -o tsv) -ne $parameters.parameters.pHostPool.
     az account set --subscription $parameters.parameters.pHostPool.value.subscriptionId
 }
 
+# Function app name matches host pool name
+$resourceGroupName = $parameters.parameters.pFunctionAppResourceGroupName.value
 Write-Output "Deploying bicep to resource group '$($resourceGroupName)' using parameter file '$($ParamFilePath)'"
-try {
-    az deployment group create `
-        --name $resourceGroupName `
-        --resource-group $resourceGroupName `
-        --template-file ".\main.bicep" `
-        --mode "Incremental" `
-        --output none `
-        --parameters $ParamFilePath
-}
-catch {
-    throw "Bicep deployment failed: $($_.Exception.Message)"
-}
+az deployment group create `
+    --name $resourceGroupName `
+    --resource-group $resourceGroupName `
+    --template-file $BicepTemplatePath `
+    --mode "Incremental" `
+    --output none `
+    --parameters $ParamFilePath
 
+if ($LASTEXITCODE -ne 0) {
+    throw "Bicep deployment failed"
+    exit 1
+}
 Write-Output "Bicep deployment completed successfully."
+
+if ($DownloadRDAgents) {
+    $params = @{
+        AssetStorageAccountName              = $parameters.parameters.pAssetStorageAccount.value.name
+        AssetStorageAccountResourceGroupName = $parameters.parameters.pAssetStorageAccount.value.resourceGroupName
+    }
+    Write-Output "Downloading RD Agent binaries to Storage Account '$($params.AssetStorageAccountName)' in Resource Group '$($params.AssetStorageAccountResourceGroupName)'"
+    .\Invoke-RdAgentDownload.ps1 @params
+}

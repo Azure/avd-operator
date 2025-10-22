@@ -1,3 +1,18 @@
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory=$true)]
+    [string]
+    $AssetStorageAccountName,
+
+    [Parameter(Mandatory=$true)]
+    [string]
+    $AssetStorageAccountResourceGroupName
+)
+
+$ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
+$InformationPreference = [System.Management.Automation.ActionPreference]::Continue
+$WarningPreference     = [System.Management.Automation.ActionPreference]::Continue
+
 $StorageContainerName = "rdagent-installers"
 $DownloadDirectory    = ".\$StorageContainerName\"
 $RDAgentUrl           = "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrmXv"
@@ -5,10 +20,9 @@ $RDBootLoaderUrl      = "https://query.prod.cms.rt.microsoft.com/cms/api/am/bina
 
 New-Item -Path ".\$StorageContainerName" -ItemType Directory -Force | Out-Null
 
-$AssetStorageAccount = $parameters.parameters.pAssetStorageAccount.value
 $StorageContext =  @{
     Container = $StorageContainerName
-    Context   = (Get-AzStorageAccount -ResourceGroupName $AssetStorageAccount.resourceGroupName -Name $AssetStorageAccount.name).Context
+    Context   = (Get-AzStorageAccount -ResourceGroupName $AssetStorageAccountResourceGroupName -Name $AssetStorageAccountName).Context
     Force     = $true
 }
 
@@ -25,11 +39,16 @@ $RDAgent = Invoke-WebRequest -Uri $RDAgentUrl -UseBasicParsing -OutFile $Downloa
 $RDAgentVer = $RDAgent.OutFile.Split('-')[-1].TrimEnd('.msi')
 $Metadata = @{ "Version" = $RDAgentVer }
 
-Write-Output "Uploading remote desktop agent binary 'RDAgent.Installer' to storage account '$($AssetStorageAccount.Name)' as blob '$($RDAgent.OutFile)'"
-Set-AzStorageBlobContent @StorageContext `
-    -Blob $($RDAgent.OutFile.Split('\')[-1] -replace '-[0-9\.]+\.msi$', '.msi') `
-    -File $RDAgent.OutFile `
-    -Metadata $Metadata | Out-Null
+Write-Output "Uploading remote desktop agent binary 'RDAgent.Installer' to storage account '$AssetStorageAccountName' as blob: '$($RDAgent.OutFile)'"
+try {
+    Set-AzStorageBlobContent @StorageContext `
+        -Blob $($RDAgent.OutFile.Split('\')[-1] -replace '-[0-9\.]+\.msi$', '.msi') `
+        -File $RDAgent.OutFile `
+        -Metadata $Metadata | Out-Null
+}
+catch {
+    throw "Failed to upload RD Agent binary to storage account: $($_.Exception.Message)"
+}
 
 # RD Agent Bootloader
 Write-Output "Downloading remote desktop agent bootloader binary '$RDBootLoaderUrl' to '$DownloadDirectory'"
@@ -37,8 +56,13 @@ $RDBootLoader = Invoke-WebRequest -Uri $RDBootLoaderUrl -UseBasicParsing -OutFil
 $RDBootLoaderVer = $RDBootLoader.OutFile.Split('-')[-1].TrimEnd('.msi')
 $Metadata = @{ "Version" = $RDBootLoaderVer }
 
-Write-Output "Uploading remote desktop agent bootloader binary 'RDBootLoader.Installer' to storage account '$($AssetStorageAccount.Name)' as blob '$($RDBootLoader.OutFile)'"
-Set-AzStorageBlobContent @StorageContext `
+Write-Output "Uploading remote desktop agent bootloader binary 'RDBootLoader.Installer' to storage account '$AssetStorageAccountName' as blob: '$($RDBootLoader.OutFile)'"
+try {
+    Set-AzStorageBlobContent @StorageContext `
     -Blob $($RDBootLoader.OutFile.Split('\')[-1] -replace '-[0-9\.]+\.msi$', '.msi') `
     -File $RDBootLoader.OutFile `
     -Metadata $Metadata | Out-Null
+}
+catch {
+    throw "Failed to upload RD Agent Bootloader binary to storage account: $($_.Exception.Message)"
+}
