@@ -122,12 +122,6 @@ function Get-Settings {
 
     $ErrorActionPreference = [System.Management.Automation.ActionPreference]::Stop
 
-    # TODO: context edit is temporary workaround until fix: https://github.com/Azure/azure-powershell/issues/24219
-    $Context = Get-AzContext
-    $Context.Environment.ExtendedProperties['AzureAppConfigurationEndpointResourceId'] = "https://azconfig.azure.us"
-    $Context.Environment.ExtendedProperties['AzureAppConfigurationEndpointSuffix'] = "azconfig.azure.us"
-    Set-AzContext -Context $Context | Out-Null
-
     $AppConfigKeyValue = Get-AzAppConfigurationKeyValue -Endpoint $AppConfigurationEndpoint
     if ($null -eq $AppConfigKeyValue) {
         Write-Log "App configuration store '$AppConfigurationEndpoint' returned null key values" -LogLevel 'ERRORSTOP'

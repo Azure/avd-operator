@@ -86,7 +86,7 @@ if ($(az account show --query "id" -o tsv) -ne $parameters.parameters.pHostPool.
 }
 
 # Function app name matches host pool name
-$functionAppName = $parameters.parameters.pHostPool.value.name 
+$functionAppName = $parameters.parameters.pHostPool.value.name
 $resourceGroupName = $parameters.parameters.pFunctionAppResourceGroupName.value
 
 Write-Output "Deploying functions to function app '$($functionAppName)' in resource group '$($resourceGroupName)'"

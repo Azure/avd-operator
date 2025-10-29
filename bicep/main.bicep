@@ -102,6 +102,7 @@ param pHostPool tResource
 param pLocation string
 param pLogAnalyticsWorkspace tLogAnalyticsWorkspace
 param pScalingPlans tScalingPlan[]
+param pServicePrincipalObjectId string
 param pTags tTags
 param pVirtualMachineSKU string
 
@@ -127,8 +128,8 @@ param pApplicationServicePlan tApplicationServicePlan = {
 }
 param pEvaluationTime string = 'PT5M'
 
-param pFunctionAppName string = replace('${pHostPool.name}', 'HP', 'FC')
-param pFunctionAppResourceGroupName string = replace('${pHostPool.name}', 'HP', 'FC')
+param pFunctionAppName string = pHostPool.name
+param pFunctionAppResourceGroupName string = pHostPool.resourceGroupName
 
 param pGlobalLocation string = 'global'
 
@@ -282,6 +283,7 @@ resource rScalingPlan 'Microsoft.DesktopVirtualization/scalingPlans@2025-04-01-p
 resource rAppConfigurationStore 'Microsoft.AppConfiguration/configurationStores@2024-05-01' = {
   name: pHostPool.name
   location: pLocation
+  dependsOn: [rRoleAssignmentDeployerAC]
   properties: {
     disableLocalAuth: true
     dataPlaneProxy: {
@@ -779,8 +781,11 @@ resource rFailedRequestsAlert 'Microsoft.Insights/metricalerts@2018-03-01' = {
 var vRoleDefinitionId = {
   AppConfigDataOwner: '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b'
   KeyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
+  StorageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+  ReaderAndDataAccess: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 }
 
+// TODO: Replace module resource with inline role assignment resource 
 module mRoleAssignmentFunctionAppKeyVaultSecretsUser 'role-assignment-resource-group.module.bicep' = {
   name: 'function-app-rbac-key-vault-secrets-user'
   scope: resourceGroup(pAuthKeyVault.subscriptionId, pAuthKeyVault.resourceGroupName)
@@ -790,19 +795,40 @@ module mRoleAssignmentFunctionAppKeyVaultSecretsUser 'role-assignment-resource-g
   }
 }
 
-//TODO: Add storage blob data contributor & reader and data access for sp on sa for assets
+resource rRoleAssignmentDeployerAC 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(deployer().objectId, vRoleDefinitionId.AppConfigDataOwner, resourceGroup().id)
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', vRoleDefinitionId.AppConfigDataOwner)
+    principalId: deployer().objectId
+    principalType: 'User'
+  }
+}
 
-// var servicePrincipalAppConfigOwnerAssignment tRoleDefinition = {
-//     name: 'AppConfigurationDataOwner'
-//     guid: '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b'
-//   }
+resource rRoleAssignmentSPAC 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(pServicePrincipalObjectId, vRoleDefinitionId.AppConfigDataOwner, resourceGroup().id)
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', vRoleDefinitionId.AppConfigDataOwner)
+    principalId: pServicePrincipalObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
 
-//TODO: Make this actually work
-// module mRoleAssignmentSPAC 'role-assignment-resource-group.module.bicep' = {
-//   name: 'service-principal-app-config-data-owner'
-//   scope: resourceGroup(pAuthKeyVault.subscriptionId, pAuthKeyVault.resourceGroupName)
-//   params: {
-//     pPrincipalId: pServicePrincipalObjectId
-//     pRoleDefinitionId: vRoleDefinitionId.AppConfigDataOwner
-//   }
-// }
+resource rRoleAssignmentSPSReaderAndDataAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(pServicePrincipalObjectId, vRoleDefinitionId.ReaderAndDataAccess, rStorageAccountAsset.id)
+  scope: rStorageAccountAsset
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', vRoleDefinitionId.ReaderAndDataAccess)
+    principalId: pServicePrincipalObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource rRoleAssignmentSPStorageBlobDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(pServicePrincipalObjectId, vRoleDefinitionId.StorageBlobDataContributor, rStorageAccountAsset.id)
+  scope: rStorageAccountAsset
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', vRoleDefinitionId.StorageBlobDataContributor)
+    principalId: pServicePrincipalObjectId
+    principalType: 'ServicePrincipal'
+  }
+}

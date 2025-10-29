@@ -26,8 +26,8 @@ try {
 
         $HostEntries = @(
             @{
-                IPAddress = "52.127.58.160"
-                FQDN      = "power-apis-usdod-001.azure-apihub.us"
+                # IPAddress = ""
+                # FQDN      = ""
             }
         )
 
