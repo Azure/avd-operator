@@ -1,3 +1,28 @@
+<#
+.SYNOPSIS
+    Stages Remote Desktop Agent binaries for session host deployment.
+
+.DESCRIPTION
+    This script will download the latest Remote Desktop Agent and Bootloader binaries from
+    Microsoft's official source, and upload them to the specified Azure Storage Account.
+    It removes the version information from the filenames when uploading, and adds the version
+    as metadata to the blobs.
+
+.PARAMETER AssetStorageAccountName
+    The name of the Azure Storage Account where RD Agent binaries will be uploaded.
+
+.PARAMETER AssetStorageAccountResourceGroupName
+    The name of the resource group containing the Azure Storage Account.
+.EXAMPLE
+    $params = @{
+        AssetStorageAccountName              = "myStorageAccount"
+        AssetStorageAccountResourceGroupName = "myResourceGroup"
+    }
+    .\Invoke-RdAgentDownload.ps1 @params
+
+    Downloads the latest Remote Desktop Agent and Bootloader binaries, and uploads them to the specified
+    Azure Storage Account.
+#>
 [CmdletBinding()]
 param (
     [Parameter(Mandatory)]
