@@ -134,7 +134,7 @@ try {
 
             # Use regular session host count instead of without stale count
             # to ensure we don't attempt to deploy a new session host
-            # using a stale sesson host name before stale session hosts are cleaned up
+            # using a stale session host name before stale session hosts are cleaned up
             $SessionHostNames = ($SessionHosts.Id | ForEach-Object {Get-ResourceInformation -ResourceId $_}).Name
             foreach ($SessionHostName in $SessionHostNames) {
                 if (-not ($DeploymentLocationParameters.ExistingSessionHostNames.Contains($SessionHostName))) {
