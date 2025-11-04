@@ -43,8 +43,9 @@ function Get-ResourceInformation {
             }
         }
 
+        # Ternary operator to handle resource names with periods in them e.g. ADDS Domain joined VMs
         $Resource = @{
-            Name           = $ResourceIdentifier.ResourceName
+            Name           = ($ResourceIdentifier.ResourceName -match '\.' ? ($ResourceIdentifier.ResourceName -split '\.')[0] : $ResourceIdentifier.ResourceName)
             Type           = $ResourceIdentifier.ResourceType
             SubscriptionId = $ResourceIdentifier.Subscription
             Id             = $ResourceId
@@ -61,7 +62,7 @@ function Get-ResourceInformation {
             $Resource.Parent = $ParentResourceId | Get-ResourceInformation
         }
 
-        $ResourceContext = Get-Context -SubscriptionId $Resource.SubscriptionId
+        $ResourceContext = Get-Context -SubscriptionId "$($Resource.SubscriptionId)"
         $RegionalResourceTypes = @(
             'Microsoft.Network/virtualNetworks'
         )

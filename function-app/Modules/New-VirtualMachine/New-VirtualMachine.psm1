@@ -38,7 +38,7 @@ function New-VirtualMachine {
         [String] $Environment,
 
         [Parameter()]
-        [String] $AdminUsername = "localadmin",
+        [String] $AdminUsername = "xadmin",
 
         [Parameter()]
         [String] $TimeZone = "Eastern Standard Time"
@@ -205,7 +205,7 @@ function New-VirtualMachine {
         if ($CreatedVirtualMachine.IsSuccessStatusCode) {
             $VirtualMachineParameters["ErrorAction"] = "Stop"
             $VirtualMachine = (Get-AzVM @VirtualMachineParameters).Id | Get-ResourceInformation
-            if ($Environment -ne "DEV") {
+            if ($Environment -ne "PROD") {
                 $scheduledShutdownResourceId = "/subscriptions/$($VirtualMachine.SubscriptionId)/resourcegroups/$($VirtualMachine.ResourceGroupName)/providers/microsoft.devtestlab/schedules/shutdown-computevm-$($VirtualMachine.Name)"
                 $properties = @{}
                 $properties.add('status', 'Enabled')

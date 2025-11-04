@@ -46,8 +46,8 @@ param (
     $DownloadRDAgents,
 
     [Parameter()]
-    [bool]
-    $GovCloud = $true,
+    [switch]
+    $GovCloud,
 
     [Parameter()]
     [string]
